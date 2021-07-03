@@ -20,7 +20,7 @@ minimumRevision = 24000;
 longDescription = "Generic post for Fanuc Robodrill like the Alpha D21SiA5, D21MiA5, and D21LiA5.";
 
 // 拡張子
-extension = "nc";
+extension = "txt";
 programNameIsInteger = true;
 setCodePage("ascii");
 
