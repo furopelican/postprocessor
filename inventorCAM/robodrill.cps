@@ -19,6 +19,7 @@ minimumRevision = 24000;
 
 longDescription = "Generic post for Fanuc Robodrill like the Alpha D21SiA5, D21MiA5, and D21LiA5.";
 
+// 拡張子
 extension = "nc";
 programNameIsInteger = true;
 setCodePage("ascii");
@@ -162,13 +163,12 @@ function formatComment(text) {
   return "(" + filterText(String(text).toUpperCase(), permittedCommentChars).replace(/[\(\)]/g, "") + ")";
 }
 
-/**
-  Output a comment.
-*/
+// コメント出力
 function writeComment(text) {
   writeln(formatComment(text));
 }
 
+// 初期設定
 function onOpen() {
 
   if (false) { // note: setup your machine here
@@ -340,6 +340,7 @@ function onOpen() {
   }
 }
 
+// コメント出力時に実行
 function onComment(message) {
   var comments = String(message).split(";");
   for (comment in comments) {
@@ -377,6 +378,7 @@ var lengthCompensationActive = false;
 var retracted = false; // specifies that the tool has been retracted to the safe plane
 
 /** Disables length compensation if currently active or if forced. */
+// 長さ補正が有効または、強制実行されている時に長さ補正を無効化する
 function disableLengthCompensation(force) {
   if (lengthCompensationActive || force) {
     validate(retracted, "Cannot cancel length compensation if the machine is not fully retracted.");
@@ -645,6 +647,7 @@ function getWorkPlaneMachineABC(workPlane) {
   return abc;
 }
 
+// 「工具交換」「ワーク座標系」「冷却」「工具長補正」などの処理時に実行
 function onSection() {
   var forceToolAndRetract = optionalSection && !currentSection.isOptional();
   optionalSection = currentSection.isOptional();
@@ -660,11 +663,13 @@ function onSection() {
   if (insertToolCall || newWorkOffset || newWorkPlane) {
     
     // stop spindle before retract during tool change
+    // 工具交換し格納する前にスピンドルを停止する
     if (insertToolCall && !isFirstSection()) {
       onCommand(COMMAND_STOP_SPINDLE);
     }
     
     // retract to safe plane
+    // 工具交換位置に移動
     retracted = true;
     writeBlock(gFormat.format(28), gAbsIncModal.format(91), "Z" + xyzFormat.format(0)); // retract
     writeBlock(gAbsIncModal.format(90));
@@ -677,6 +682,7 @@ function onSection() {
 
   writeln("");
 
+  // ジョブ名記入
   if (hasParameter("operation-comment")) {
     var comment = getParameter("operation-comment");
     if (comment) {
@@ -703,12 +709,15 @@ function onSection() {
     forceWorkPlane();
     
     retracted = true;
+    // クーラントOFF
     onCommand(COMMAND_COOLANT_OFF);
   
+    // 最初のジョブ以外の時オプショナルストップを追加
     if (!isFirstSection() && properties.optionalStop) {
       onCommand(COMMAND_OPTIONAL_STOP);
     }
 
+    // 工具番号が99より大きい時警告
     if (tool.number > 99) {
       warning(localize("Tool number exceeds maximum value."));
     }
@@ -735,6 +744,7 @@ function onSection() {
       }
     }
 
+    // preloadToolが有効な時実行
     if (properties.preloadTool) {
       var nextTool = getNextTool(tool.number);
       if (nextTool) {
