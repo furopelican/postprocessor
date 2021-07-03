@@ -170,7 +170,7 @@ function writeComment(text) {
 
 // 初期設定
 function onOpen() {
-  writeComment("onOpen start")
+  // writeComment("onOpen start")
   if (false) { // note: setup your machine here
     var aAxis = createAxis({coordinate:0, table:false, axis:[1, 0, 0], range:[-360,360], preference:1});
     var cAxis = createAxis({coordinate:2, table:false, axis:[0, 0, 1], range:[-360,360], preference:1});
@@ -338,7 +338,7 @@ function onOpen() {
     feedFormat = createFormat({decimals:(unit == MM ? 4 : 5), forceDecimal:true});
     feedOutput = createVariable({prefix:"F"}, feedFormat);
   }
-  writeComment("onOpen end")
+  // writeComment("onOpen end")
 }
 
 // コメント出力時に実行
@@ -650,7 +650,7 @@ function getWorkPlaneMachineABC(workPlane) {
 
 // 「工具交換」「ワーク座標系」「冷却」「工具長補正」などの処理時に実行
 function onSection() {
-  writeComment("onSection start")
+  // writeComment("onSection start")
   var forceToolAndRetract = optionalSection && !currentSection.isOptional();
   optionalSection = currentSection.isOptional();
 
@@ -674,9 +674,26 @@ function onSection() {
     // 工具交換位置に移動
     retracted = true;
     writeBlock(gFormat.format(28), gAbsIncModal.format(91), "Z" + xyzFormat.format(0)); // retract
-    writeBlock(gAbsIncModal.format(90));
+
+    // writeBlock(gAbsIncModal.format(90));
+    // forceXYZ();
+
+    // 扉前に移動
+    var homeX;
+    if (machineConfiguration.hasHomePositionX()) {
+      homeX = "X" + xyzFormat.format(machineConfiguration.getHomePositionX());
+    }
+    var homeY;
+    if (machineConfiguration.hasHomePositionY()) {
+      homeY = "Y" + xyzFormat.format(machineConfiguration.getHomePositionY());
+    }
+    writeBlock(gAbsIncModal.format(90), gFormat.format(53), gMotionModal.format(0), homeX, homeY);
+
     forceXYZ();
+    
+    // 最初のジョブ以外
     if (insertToolCall && !isFirstSection()) {
+    // 工具長補正キャンセル
       disableLengthCompensation();
       setSmoothing(false);
     }
@@ -925,7 +942,7 @@ function onSection() {
   }
   retracted = false;
 
-  writeComment("onSection end")
+  // writeComment("onSection end")
 }
 
 function onDwell(seconds) {
