@@ -170,7 +170,7 @@ function writeComment(text) {
 
 // 初期設定
 function onOpen() {
-
+  writeComment("onOpen start")
   if (false) { // note: setup your machine here
     var aAxis = createAxis({coordinate:0, table:false, axis:[1, 0, 0], range:[-360,360], preference:1});
     var cAxis = createAxis({coordinate:2, table:false, axis:[0, 0, 1], range:[-360,360], preference:1});
@@ -338,6 +338,7 @@ function onOpen() {
     feedFormat = createFormat({decimals:(unit == MM ? 4 : 5), forceDecimal:true});
     feedOutput = createVariable({prefix:"F"}, feedFormat);
   }
+  writeComment("onOpen end")
 }
 
 // コメント出力時に実行
@@ -649,6 +650,7 @@ function getWorkPlaneMachineABC(workPlane) {
 
 // 「工具交換」「ワーク座標系」「冷却」「工具長補正」などの処理時に実行
 function onSection() {
+  writeComment("onSection start")
   var forceToolAndRetract = optionalSection && !currentSection.isOptional();
   optionalSection = currentSection.isOptional();
 
@@ -922,6 +924,8 @@ function onSection() {
     activeMovements = undefined;
   }
   retracted = false;
+
+  writeComment("onSection end")
 }
 
 function onDwell(seconds) {
