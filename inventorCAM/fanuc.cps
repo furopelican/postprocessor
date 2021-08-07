@@ -19,7 +19,7 @@ minimumRevision = 45702;
 
 longDescription = "Generic post for Fanuc.";
 
-extension = "nc";
+extension = "txt";
 programNameIsInteger = true;
 setCodePage("ascii");
 
@@ -58,7 +58,7 @@ properties = {
     description: "Preloads the next tool at a tool change (if any).",
     group: 1,
     type: "boolean",
-    value: true,
+    value: false,
     scope: "post"
   },
   showSequenceNumbers: {
@@ -1370,6 +1370,7 @@ function setAbsoluteMode(xyz, abc) {
   }
 }
 
+// 工具交換、ジョブの変更時に実行する
 function onSection() {
   var forceToolAndRetract = optionalSection && !currentSection.isOptional();
   optionalSection = currentSection.isOptional();
@@ -1397,12 +1398,14 @@ function onSection() {
 
   if (insertToolCall || newWorkOffset || newWorkPlane || forceSmoothing) {
     // stop spindle before retract during tool change
+    // 工具交換前にスピンドルを停止
     if (insertToolCall && !isFirstSection()) {
       onCommand(COMMAND_STOP_SPINDLE);
     }
 
     // retract to safe plane
     writeRetract(Z); // retract
+    writeRetract(X,Y); // 機械座標原点までX,Yを移動する
 
     if (isFirstSection() && machineConfiguration.isMultiAxisConfiguration()) {
       setWorkPlane(new Vector(0, 0, 0)); // reset working plane
