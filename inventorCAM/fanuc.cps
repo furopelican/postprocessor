@@ -1401,11 +1401,11 @@ function onSection() {
     // 工具交換前にスピンドルを停止
     if (insertToolCall && !isFirstSection()) {
       onCommand(COMMAND_STOP_SPINDLE);
+      onCommand(COMMAND_COOLANT_OFF);
     }
 
     // retract to safe plane
     writeRetract(Z); // retract
-    writeRetract(X,Y); // 機械座標原点までX,Yを移動する
 
     if (isFirstSection() && machineConfiguration.isMultiAxisConfiguration()) {
       setWorkPlane(new Vector(0, 0, 0)); // reset working plane
@@ -1456,7 +1456,7 @@ function onSection() {
     
     if (!isFirstSection() && insertToolCall) {
       forceWorkPlane();
-      onCommand(COMMAND_COOLANT_OFF);
+      writeRetract(X,Y); // 機械座標原点までX,Yを移動する
     }
     if (!isFirstSection() && getProperty("optionalStop") && insertToolCall) {
       onCommand(COMMAND_OPTIONAL_STOP);
