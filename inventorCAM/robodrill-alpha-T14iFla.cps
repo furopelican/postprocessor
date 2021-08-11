@@ -303,7 +303,7 @@ var gRotationModal = createModal({
 
 // fixed settings
 var firstFeedParameter = 500;
-var useMultiAxisFeatures = true;
+var useMultiAxisFeatures = false;
 var forceMultiAxisIndexing = false; // force multi-axis indexing for 3D programs
 var maximumLineLength = 80; // the maximum number of charaters allowed in a line
 var minimumCyclePoints = 5; // minimum number of points in cycle operation to consider for subprogram
