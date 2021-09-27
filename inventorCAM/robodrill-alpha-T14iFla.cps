@@ -1396,6 +1396,7 @@ function onSection() {
  
   operationNeedsSafeStart = getProperty("safeStartAllOperations") && !isFirstSection();
 
+  // 工具交換する前にスピンドル、クーラントの停止Z軸の退避
   if (insertToolCall || newWorkOffset || newWorkPlane || forceSmoothing) {
     // stop spindle before retract during tool change
     // 工具交換前にスピンドルを停止
@@ -1405,18 +1406,21 @@ function onSection() {
     }
 
     // retract to safe plane
-    writeRetract(Z); // retract
+    writeRetract(Z); // 工具をZ方向に退避する
 
+    // 最初のジョブかつ回転軸を持つ工作機械の場合は回転軸をすべて0度にしてワーク座標系をリセットする
     if (isFirstSection() && machineConfiguration.isMultiAxisConfiguration()) {
       setWorkPlane(new Vector(0, 0, 0)); // reset working plane
     }
     forceXYZ();
+    // 最初のジョブ以外の工具交換のときまたは、プロパティ[useSmoothing]がtrueのとき 工具長補正をOFF、スムージングをOFFにする
     if ((insertToolCall && !isFirstSection()) || forceSmoothing) {
       disableLengthCompensation();
       setSmoothing(false);
     }
   }
 
+  // コメントがある場合
   if (hasParameter("operation-comment")) {
     var comment = getParameter("operation-comment");
     if (comment && ((comment !== lastOperationComment) || !patternIsActive || insertToolCall)) {
@@ -1430,6 +1434,7 @@ function onSection() {
     writeln("");
   }
   
+  // プロパティ[showNotes]がtrueのとき
   if (getProperty("showNotes") && hasParameter("notes")) {
     var notes = getParameter("notes");
     if (notes) {
@@ -1445,6 +1450,7 @@ function onSection() {
     }
   }
 
+  // プロパティ[safeStartAllOperations]がtrueのとき
   if (operationNeedsSafeStart) {
     if (!retracted) {
       skipBlock = true;
@@ -1452,23 +1458,28 @@ function onSection() {
     }
   }
   
+  // 工具交換または、プロパティ[safeStartAllOperations]がtrueのとき 工具交換指令をするまで
   if (insertToolCall || operationNeedsSafeStart) {
     
+    // 最初のジョブ以外の工具交換の時は機械座標原点までX,Yを移動する
     if (!isFirstSection() && insertToolCall) {
       forceWorkPlane();
       writeRetract(X,Y); // 機械座標原点までX,Yを移動する
     }
+    // 最初のジョブ以外の工具交換時にプロパティ[optionalStop]がtrueのとき
     if (!isFirstSection() && getProperty("optionalStop") && insertToolCall) {
       onCommand(COMMAND_OPTIONAL_STOP);
     }
-
+    // 交換する工具の工具番号が99以上の時 警告表示
     if (tool.number > 99) {
       warning(localize("Tool number exceeds maximum value."));
     }
     
+    // 工具交換の時はG49(工具長補正OFF)を指令しない
     if (insertToolCall) {
       disableLengthCompensation(false);
     }
+    // 工具番号と工具交換を指令する
     skipBlock = !insertToolCall;
     writeBlock("T" + toolFormat.format(tool.number), mFormat.format(6));
     if (tool.comment) {
@@ -1490,7 +1501,7 @@ function onSection() {
         writeComment(localize("ZMIN") + "=" + zRange.getMinimum());
       }
     }
-
+    // プロパティ[preloadTool]がtrueのとき 次のジョブで使用する工具をセットする
     if (getProperty("preloadTool")) {
       var nextTool = getNextTool(tool.number);
       if (nextTool) {
@@ -1507,6 +1518,7 @@ function onSection() {
       }
     }
   }
+  // プローブに交換する時
   if (tool.type != TOOL_PROBE) {
     var outputSpindleSpeed = insertToolCall || forceSpindleSpeed || isFirstSection() ||
     rpmFormat.areDifferent(spindleSpeed, sOutput.getCurrent()) ||
@@ -2836,7 +2848,9 @@ function onCommand(command) {
   }
 }
 
+// 加工が終わった時
 function onSectionEnd() {
+  // 複合軸加工の時
   if (currentSection.isMultiAxis()) {
     writeBlock(gFeedModeModal.format(94)); // inverse time feed off
   }
