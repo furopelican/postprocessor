@@ -1408,6 +1408,10 @@ function onSection() {
     // retract to safe plane
     writeRetract(Z); // 工具をZ方向に退避する
 
+    if (currentSection.isMultiAxis()) {
+      writeComment("isMultiAxis")
+    }
+
     // 最初のジョブかつ回転軸を持つ工作機械の場合は回転軸をすべて0度にしてワーク座標系をリセットする
     if (isFirstSection() && machineConfiguration.isMultiAxisConfiguration()) {
       setWorkPlane(new Vector(0, 0, 0)); // reset working plane
@@ -1415,6 +1419,7 @@ function onSection() {
     forceXYZ();
     // 最初のジョブ以外の工具交換のときまたは、プロパティ[useSmoothing]がtrueのとき 工具長補正をOFF、スムージングをOFFにする
     if ((insertToolCall && !isFirstSection()) || forceSmoothing) {
+      writeComment("disableLengthCompensation")
       disableLengthCompensation();
       setSmoothing(false);
     }
@@ -1475,8 +1480,9 @@ function onSection() {
       warning(localize("Tool number exceeds maximum value."));
     }
     
-    // 工具交換の時はG49(工具長補正OFF)を指令しない
+    // 工具交換時に工具長補正がONの場合はG49(工具長補正OFF)を指令する
     if (insertToolCall) {
+      writeComment("disableLengthCompensation2")
       disableLengthCompensation(false);
     }
     // 工具番号と工具交換を指令する
@@ -1626,8 +1632,10 @@ function onSection() {
     
     // cancel compensation prior to enabling it, required when switching G43/G43.4 modes
     skipBlock = _skipBlock;
+    writeComment("disableLengthCompensation3")
+    // 工具長補正がONの場合はG49(工具長補正OFF)を指令する 同一工具でTCPをONにするときなど
     disableLengthCompensation(false);
-
+    writeComment("disableLengthCompensation3 end")
     if (!machineConfiguration.isHeadConfiguration()) {
       skipBlock = _skipBlock;
       writeBlock(
@@ -3084,6 +3092,7 @@ function onRewindMachineEntry(_a, _b, _c) {
 
 /** Retract to safe position before indexing rotaries. */
 function onMoveToSafeRetractPosition() {
+  writeComment("onMoveToSafeRetractPosition")
   writeRetract(Z);
   // cancel TCP so that tool doesn't follow rotaries
   if (currentSection.isMultiAxis() && tcpIsSupported) {
